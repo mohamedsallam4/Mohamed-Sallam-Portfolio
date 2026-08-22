@@ -1,0 +1,58 @@
+{
+  "profile": {
+    "name": "Ahmed Developer",
+    "role": "Flutter Developer",
+    "bio": "مطور تطبيقات موبايل وويب شغوف ببناء تجارب مستخدم مميزة باستخدام Flutter.",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/123456?v=4", 
+    "cvUrl": "https://example.com/my-cv.pdf"
+  },
+  "socials": [
+    {
+      "platform": "GitHub",
+      "url": "https://github.com/username",
+      "iconCode": "f09b" 
+    },
+    {
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/in/username",
+      "iconCode": "f0e1"
+    },
+    {
+      "platform": "Email",
+      "url": "mailto:email@example.com",
+      "iconCode": "f0e0"
+    }
+  ],
+  "skills": [
+    "Flutter",
+    "Dart",
+    "Firebase",
+    "REST API",
+    "Git",
+    "Clean Architecture",
+    "Provider"
+  ],
+  "projects": [
+    {
+      "title": "E-Commerce App",
+      "description": "تطبيق متجر إلكتروني كامل مع لوحة تحكم ودفع إلكتروني.",
+      "imageUrl": "https://via.placeholder.com/400x300",
+      "githubUrl": "https://github.com/username/project1",
+      "liveUrl": "https://project-demo.com",
+      "technologies": ["Flutter", "Firebase", "Stripe"]
+    },
+    {
+      "title": "Chat Application",
+      "description": "تطبيق محادثة فورية يدعم الصوت والصورة.",
+      "imageUrl": "https://via.placeholder.com/400x300",
+      "githubUrl": "https://github.com/username/project2",
+      "liveUrl": null,
+      "technologies": ["Flutter", "Socket.io", "Node.js"]
+    }
+  ],
+  "contact": {
+    "email": "contact@ahmed.dev",
+    "phone": "+201000000000",
+    "location": "Cairo, Egypt"
+  }
+}
