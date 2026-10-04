@@ -110,15 +110,28 @@ class NavBar extends StatelessWidget {
                   }).toList(),
                 ),
 
-              // زر تبديل الثيم (Dark / Light Mode)
+              // 🌟 زر تبديل الثيم بتأثير حركي (Rotation + Fade) 🌟
               IconButton(
-                icon: Icon(
-                  isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded,
-                  color: isDarkMode ? AppColors.accentColor : Colors.amber[800],
+                tooltip: isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+                onPressed: () => viewModel.toggleTheme(),
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder: (child, animation) => RotationTransition(
+                    turns: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: isDarkMode
+                      ? const Icon(
+                          Icons.wb_sunny_rounded,
+                          key: ValueKey('sun'),
+                          color: AppColors.accentColor,
+                        )
+                      : Icon(
+                          Icons.nights_stay_rounded,
+                          key: ValueKey('moon'),
+                          color: Colors.amber[800],
+                        ),
                 ),
-                onPressed: () {
-                  viewModel.toggleTheme();
-                },
               ),
             ],
           ),

@@ -6,7 +6,7 @@ import '../../widgets/nav_bar.dart';
 import '../../widgets/footer.dart';
 import '../../widgets/ai_chatbot_widget.dart';
 import '../../widgets/skills_marquee_widget.dart';
-import '../../widgets/back_to_top_button.dart'; // استدعاء زر الصعود لأعلى
+import '../../widgets/back_to_top_button.dart';
 import 'home/home_section.dart';
 import 'about/about_section.dart';
 import 'skills/skills_section.dart';
@@ -25,6 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   final ScrollController _scrollController = ScrollController();
   
   bool _showBackToTop = false;
+  double _scrollProgress = 0.0;
 
   final homeKey = GlobalKey();
   final aboutKey = GlobalKey();
@@ -43,12 +44,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // مراقبة حركة الـ Scroll لإظهار أو إخفاء الزرار
     _scrollController.addListener(() {
-      if (_scrollController.offset >= 400 && !_showBackToTop) {
-        setState(() => _showBackToTop = true);
-      } else if (_scrollController.offset < 400 && _showBackToTop) {
-        setState(() => _showBackToTop = false);
+      if (_scrollController.hasClients) {
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        final currentScroll = _scrollController.offset;
+        setState(() {
+          _scrollProgress = maxScroll > 0 ? (currentScroll / maxScroll).clamp(0.0, 1.0) : 0.0;
+          _showBackToTop = currentScroll >= 400;
+        });
       }
     });
   }
@@ -137,7 +140,7 @@ class _MainScreenState extends State<MainScreen> {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
-                "© 2026 Mohamed Sallam",
+                "© ${DateTime.now().year} Mohamed Sallam",
                 style: TextStyle(
                   color: isDarkMode ? AppColors.textSecondary : Colors.grey[600],
                   fontSize: 12,
@@ -147,7 +150,6 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
       ),
-      // استخدام Stack لعرض المحتوى وزر الشات وبجانبه زر العودة للأعلى
       body: Stack(
         children: [
           Consumer<PortfolioViewModel>(
@@ -169,9 +171,16 @@ class _MainScreenState extends State<MainScreen> {
                 return Column(
                   children: [
                     NavBar(sectionKeys: sectionKeys, scaffoldKey: _scaffoldKey),
+                    // شريط التمرير التفاعلي
+                    LinearProgressIndicator(
+                      value: _scrollProgress,
+                      minHeight: 3,
+                      backgroundColor: Colors.transparent,
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentColor),
+                    ),
                     Expanded(
                       child: SingleChildScrollView(
-                        controller: _scrollController, // ربط الـ Controller هنا
+                        controller: _scrollController,
                         child: Column(
                           children: [
                             HomeSection(key: homeKey),
@@ -194,10 +203,7 @@ class _MainScreenState extends State<MainScreen> {
               return const SizedBox();
             },
           ),
-          // زر الشات بوت العائم
           const AIChatbotWidget(),
-          
-          // زر الصعود لأعلى الصفحة العائم
           BackToTopButton(
             scrollController: _scrollController,
             isVisible: _showBackToTop,
