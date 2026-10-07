@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/portfolio_model.dart';
@@ -8,18 +9,9 @@ class PortfolioRepository {
   static const String _gistRawUrl =
       "https://gist.githubusercontent.com/mohamedsallam4/2694f1287917771db3f67f59fdec55df/raw";
 
-  // دالة لجلب البيانات: تبدأ بجلب ملف الـ Gist مباشرة لضمان عدم توقف الموقع
+  // دالة جلب البيانات: تقرأ من Firestore أولاً لضمان الحصول على أحدث تعديلات الأدمن
   Future<PortfolioData> getPortfolioData() async {
-    try {
-      final response = await http.get(Uri.parse(_gistRawUrl));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return PortfolioData.fromJson(data);
-      }
-    } catch (_) {
-      // في حالة انقطاع الاتصال بالجيست، نحاول القراءة من فايربيس كاحتياطي
-    }
-
+    // 1. محاولة جلب أحدث البيانات المحفوظة في فايربيس
     try {
       DocumentSnapshot snapshot =
           await _firestore.collection('settings').doc('portfolio_data').get();
@@ -30,10 +22,30 @@ class PortfolioRepository {
         return PortfolioData.fromJson(data);
       }
     } catch (e) {
-      throw Exception('Failed to load portfolio data from both Gist and Firebase: $e');
+      debugPrint("Firebase Fetch Warning: $e");
     }
 
-    throw Exception('No portfolio data available.');
+    // 2. إذا كان فايربيس فارغاً أو حدث انقطاع، نعتمد على الـ Gist كقيمة ابتدائية احتياطية
+    try {
+      final response = await http.get(Uri.parse(_gistRawUrl));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final portfolio = PortfolioData.fromJson(data);
+
+        // حفظ نسخة أولية في فايربيس للبدء منها لاحقاً
+        _firestore
+            .collection('settings')
+            .doc('portfolio_data')
+            .set(data)
+            .catchError((_) {});
+
+        return portfolio;
+      }
+    } catch (e) {
+      debugPrint("Gist Fetch Error: $e");
+    }
+
+    throw Exception('Failed to load portfolio data from Firebase and Gist.');
   }
 
   // حفظ التعديلات في فايربيس للأدمن
@@ -73,7 +85,10 @@ class PortfolioRepository {
         }
       };
 
-      await _firestore.collection('settings').doc('portfolio_data').set(jsonData);
+      await _firestore
+          .collection('settings')
+          .doc('portfolio_data')
+          .set(jsonData, SetOptions(merge: true));
     } catch (e) {
       throw Exception('Error saving data to Firebase: $e');
     }

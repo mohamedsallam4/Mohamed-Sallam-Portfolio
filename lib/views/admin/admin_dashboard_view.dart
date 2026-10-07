@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // 👈 لاستعراض الرسائل من فايربيس
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../view_models/portfolio_view_model.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/portfolio_model.dart';
@@ -18,6 +18,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
   late TextEditingController _bioController;
   late TextEditingController _cvController;
   late TextEditingController _avatarController;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -46,7 +47,6 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     super.dispose();
   }
 
-  // نافذة إضافة مهارة جديدة
   void _showAddSkillDialog(PortfolioViewModel viewModel) {
     final TextEditingController skillController = TextEditingController();
     showDialog(
@@ -69,10 +69,10 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
-            onPressed: () {
+            onPressed: () async {
               if (skillController.text.isNotEmpty) {
-                viewModel.addSkill(skillController.text.trim());
-                Navigator.pop(context);
+                await viewModel.addSkill(skillController.text.trim());
+                if (context.mounted) Navigator.pop(context);
               }
             },
             child: const Text("Add", style: TextStyle(color: Colors.white)),
@@ -82,7 +82,6 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     );
   }
 
-  // نافذة إضافة مشروع جديد
   void _showAddProjectDialog(PortfolioViewModel viewModel) {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController descController = TextEditingController();
@@ -149,7 +148,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
-            onPressed: () {
+            onPressed: () async {
               if (titleController.text.isNotEmpty) {
                 List<String> technologies = techsController.text
                     .split(',')
@@ -166,8 +165,8 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   technologies: technologies,
                 );
 
-                viewModel.addProject(newProject);
-                Navigator.pop(context);
+                await viewModel.addProject(newProject);
+                if (context.mounted) Navigator.pop(context);
               }
             },
             child: const Text("Add Project", style: TextStyle(color: Colors.white)),
@@ -177,7 +176,6 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     );
   }
 
-  // نافذة تعديل مشروع موجود مسبقاً
   void _showEditProjectDialog(PortfolioViewModel viewModel, int index, dynamic project) {
     final TextEditingController titleController = TextEditingController(text: project.title);
     final TextEditingController descController = TextEditingController(text: project.description);
@@ -244,7 +242,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentColor),
-            onPressed: () {
+            onPressed: () async {
               if (titleController.text.isNotEmpty) {
                 List<String> technologies = techsController.text
                     .split(',')
@@ -261,8 +259,8 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   technologies: technologies,
                 );
 
-                viewModel.updateProject(index, updatedProject);
-                Navigator.pop(context);
+                await viewModel.updateProject(index, updatedProject);
+                if (context.mounted) Navigator.pop(context);
               }
             },
             child: const Text("Save Changes", style: TextStyle(color: Colors.white)),
@@ -402,7 +400,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 ),
                 const SizedBox(height: 30),
 
-                // 📨 4. قسم رسائل الزوار (Inbox Messages from Firebase)
+                // 4. قسم رسائل الزوار
                 _buildSectionCard(
                   title: "4. Inbox Messages (Client / HR)",
                   children: [
@@ -444,7 +442,6 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                   icon: const Icon(Icons.delete, color: Colors.redAccent),
                                   tooltip: "Delete Message",
                                   onPressed: () async {
-                                    // حذف الرسالة من فايربيس
                                     await FirebaseFirestore.instance.collection('messages').doc(msg.id).delete();
                                   },
                                 ),
@@ -458,7 +455,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 ),
                 const SizedBox(height: 40),
                 
-                // زر الحفظ النهائي
+                // زر الحفظ النهائي مع التحقق من النتيجة
                 Align(
                   alignment: Alignment.centerRight,
                   child: ElevatedButton(
@@ -467,22 +464,50 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
-                    onPressed: () {
-                      viewModel.updateProfile(
-                        name: _nameController.text.trim(),
-                        role: _roleController.text.trim(),
-                        bio: _bioController.text.trim(),
-                        avatarUrl: _avatarController.text.trim(),
-                        cvUrl: _cvController.text.trim(),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("All changes saved & updated live in Firebase! 🎉")),
-                      );
-                    },
-                    child: const Text(
-                      "Save All Changes",
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
+                    onPressed: _isSaving
+                        ? null
+                        : () async {
+                            setState(() => _isSaving = true);
+                            try {
+                              await viewModel.updateProfile(
+                                name: _nameController.text.trim(),
+                                role: _roleController.text.trim(),
+                                bio: _bioController.text.trim(),
+                                avatarUrl: _avatarController.text.trim(),
+                                cvUrl: _cvController.text.trim(),
+                              );
+
+                              if (context.mounted) {
+                                if (viewModel.errorMessage.isNotEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Error: ${viewModel.errorMessage}"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("All changes saved & updated live in Firebase! 🎉"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              }
+                            } finally {
+                              if (mounted) setState(() => _isSaving = false);
+                            }
+                          },
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Save All Changes",
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                   ),
                 ),
               ],

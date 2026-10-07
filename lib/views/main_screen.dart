@@ -85,14 +85,15 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.primaryBackground,
+      // 🌟 تم تعديل الخلفية لتكون متجاوبة مع الـ Light والـ Dark بدقة 🌟
+      backgroundColor: isDarkMode ? AppColors.primaryBackground : const Color(0xFFF8FAFC),
       drawer: Drawer(
         backgroundColor: isDarkMode ? AppColors.secondaryBackground : Colors.white,
         child: Column(
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: isDarkMode ? AppColors.primaryBackground : Colors.grey[100],
+                color: isDarkMode ? AppColors.primaryBackground : const Color(0xFFF1F5F9),
               ),
               child: Center(
                 child: Text(
@@ -100,7 +101,7 @@ class _MainScreenState extends State<MainScreen> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: isDarkMode ? AppColors.accentColor : Colors.black,
+                    color: isDarkMode ? AppColors.accentColor : const Color(0xFF1E293B),
                   ),
                 ),
               ),
@@ -112,14 +113,14 @@ class _MainScreenState extends State<MainScreen> {
                   return ListTile(
                     leading: Icon(
                       _getSectionIcon(title),
-                      color: isDarkMode ? AppColors.accentColor : Colors.grey[800],
+                      color: isDarkMode ? AppColors.accentColor : const Color(0xFFD97706),
                     ),
                     title: Text(
                       title,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: isDarkMode ? AppColors.textPrimary : Colors.black87,
+                        color: isDarkMode ? AppColors.textPrimary : const Color(0xFF1E293B),
                       ),
                     ),
                     onTap: () {
@@ -171,7 +172,6 @@ class _MainScreenState extends State<MainScreen> {
                 return Column(
                   children: [
                     NavBar(sectionKeys: sectionKeys, scaffoldKey: _scaffoldKey),
-                    // شريط التمرير التفاعلي
                     LinearProgressIndicator(
                       value: _scrollProgress,
                       minHeight: 3,
